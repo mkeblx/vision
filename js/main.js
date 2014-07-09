@@ -124,14 +124,21 @@ function setupWebcam() {
 
   scene.add(mesh);
 
-  var bR = 1.05;
-  geo = new THREE.PlaneGeometry(size*bR, (1/aspect*size) *bR);
+  var glowTexture = THREE.ImageUtils.loadTexture(
+    'textures/border.png'
+  );  
+
+
+  var bR = 1.2;
+  geo = new THREE.PlaneGeometry(size*1.15, (1/aspect*size) * 1.2);
   mat = new THREE.MeshBasicMaterial({
+    map: glowTexture,
     color: 0xaaaaaa
   });
   mesh = new THREE.Mesh(geo, mat);
 
-  mesh.position.set(0, 3, -10);
+  mesh.position.set(0, 3, -10.1);
+
 
   scene.add(mesh);
 }
