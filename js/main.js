@@ -6,10 +6,19 @@ var element, container;
 
 var clock = new THREE.Clock();
 
+var screenObj;
+
+var htracker;
+var head = {x: 0, y: 0, z: 0};
+var face = {angle: 0, width: 0, height: 0, x: 0, y: 0};
+var haveTracking = false;
+
+var faceMesh, debugTex, debugCtx;
+
 var webcamTexture;
 
 navigator.getUserMedia = navigator.getUserMedia ||
-  navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
+          navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
 var num = navigator.userAgent.match;
 var isMobile = navigator.userAgent.match(/Android/i) || navigator.userAgent.match(/webOS/i)
             || navigator.userAgent.match(/iPhone/i) || navigator.userAgent.match(/iPad/i)
@@ -58,7 +67,7 @@ function postSources() {
 function init() {
   renderer = new THREE.WebGLRenderer();
   element = renderer.domElement;
-  container = document.getElementById('example');
+  container = document.getElementById('canvas');
   container.appendChild(element);
 
   effect = new THREE.StereoEffect(renderer, { separation: 0.3 });
@@ -97,6 +106,10 @@ function init() {
 
   setupWebcam();
 
+  setupFacebox();
+
+  setupTracking();
+
   if (isMobile)
     element.addEventListener('click', fullscreen, false);
 
@@ -106,12 +119,18 @@ function init() {
 
 function setupWebcam() {
   var id = videoSelect.value;
-  webcamTexture = new THREEx.WebcamTexture(id);
+  webcamTexture = new THREEx.WebcamTexture();
+
+  webcamTexture.setSource(id);
 
   var w = 320, h = 240;
   var aspect = w/h;
 
   var size = 10;
+
+  screenObj = new THREE.Object3D();
+
+  screenObj.position.set(0, 3, -10);
 
   var geo = new THREE.PlaneGeometry(size, 1/aspect * size);
   var mat = new THREE.MeshBasicMaterial({
@@ -120,14 +139,12 @@ function setupWebcam() {
   });
   var mesh = new THREE.Mesh(geo, mat);
 
-  mesh.position.set(0, 3, -10);
+  screenObj.add(mesh);
 
-  scene.add(mesh);
 
   var glowTexture = THREE.ImageUtils.loadTexture(
     'textures/border.png'
-  );  
-
+  );
 
   var bR = 1.2;
   geo = new THREE.PlaneGeometry(size*1.15, (1/aspect*size) * 1.2);
@@ -135,12 +152,134 @@ function setupWebcam() {
     map: glowTexture,
     color: 0xaaaaaa
   });
-  mesh = new THREE.Mesh(geo, mat);
+  var glowMesh = new THREE.Mesh(geo, mat);
 
-  mesh.position.set(0, 3, -10.1);
+  glowMesh.position.z = -0.1;
+
+  screenObj.add(glowMesh);
+
+  scene.add(screenObj);
+}
+
+function setupTracking() {
+  var statusMessages = {
+    'whitebalance' : 'checking for stability of camera whitebalance',
+    'detecting' : 'detecting face',
+    'hints' : 'hmm. detecting the face is taking a long time',
+    'redetecting' : 'lost track of face, redetecting',
+    'lost' : 'lost track of face',
+    'found' : 'tracking humanoid face'
+  };
+
+  var videoInput = webcamTexture.video;
+  var canvasInput = document.getElementById('vid-canvas');
+  var debugOverlay = document.getElementById('debug');
+  
+  var settings = {
+    ui: 0,
+    fadeVideo: 1,
+    debug: debugOverlay,
+    calcAngles: true
+  };
+
+  htracker = new headtrackr.Tracker(settings);
+  htracker.init(videoInput, canvasInput, true);
+  htracker.start();
+
+  document.addEventListener('headtrackrStatus', function(ev) {
+    var htmsg = document.getElementById('headtrackerMessage');
+    
+    if (ev.status in statusMessages) {
+      var msg = statusMessages[ev.status];
+      console.log(ev.status, msg);
+
+      if (ev.status == 'found') {
+        haveTracking = true;
+        console.log('have tracking');
+        //htracker.stop();
+        //htracker.start();
+        toggleFacebox(true);
+      } else if (ev.status == 'lost' || ev.status == 'redetecting') {
+        haveTracking = false;
+        console.log('LOST tracking');
+        toggleFacebox(false);
+      }
+
+      // htmsg.innerHTML = msg; // todo : draw text in space
+    }
+
+  }, true);
+
+  document.addEventListener('headtrackingEvent', function(ev) {
+    haveTracking = true;
+
+    head.x = ev.x.toFixed(2);
+    head.y = ev.y.toFixed(2);
+    head.z = ev.z.toFixed(2);
+
+   // updateTrackingUI();
+  });
+
+  document.addEventListener('facetrackingEvent', function(ev) {
+    face.width = ev.width;
+    face.height = ev.height;
+    face.x = ev.x;
+    face.y = ev.y;
+    face.angle = ev.angle;
+
+    updateFacebox();
+  });
+
+  // draw Marker
+
+}
+
+function setupFacebox() {
+  var w = 320, h = 240;
+  var aspect = w/h;
+
+  var size = 10;
+
+  debugCtx = document.getElementById('debug');//.getContext('2d');
+  debugTex = new THREE.Texture(debugCtx);
+  debugTex.needsUpdate = true;
+
+  var geo = new THREE.PlaneGeometry(1, 1);
+  geo = new THREE.PlaneGeometry(size, 1/aspect * size);
+  var mat = new THREE.MeshBasicMaterial({
+    //color: 0x3878ff,
+    transparent: true,
+    opacity: 0.93,
+    map: debugTex
+  });
 
 
-  scene.add(mesh);
+
+  faceMesh = new THREE.Mesh(geo, mat);
+
+  faceMesh.position.z = 0.04;
+  faceMesh.visible = true;
+
+  screenObj.add(faceMesh);
+}
+
+function updateFacebox() {
+  return;
+  var w = 320, h = 240;
+
+  faceMesh.rotation.z = -face.angle;
+
+  var s = 1/ (w/10);
+
+  faceMesh.scale.y = 1 * face.width * s;
+  faceMesh.scale.x = 1 * face.height * s;
+
+  faceMesh.position.x = (face.x - w/2) * s;
+  faceMesh.position.y = -(face.y - h/2) * s;
+}
+
+function toggleFacebox(show) {
+  faceMesh.visible = show;// || !faceMesh.visible;
 }
 
 function resize() {
@@ -159,6 +298,7 @@ function update(dt) {
 
   camera.updateProjectionMatrix();
 
+  debugTex.needsUpdate = true;
   webcamTexture.update();
 }
 
