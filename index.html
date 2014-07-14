@@ -4,10 +4,14 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>Cardboard Video Feed</title>
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <link href="http://fonts.googleapis.com/css?family=Roboto:400,300,500,700" rel="stylesheet">
     <style>
       body {
-        margin: 0px;
+        margin: 0;
+        padding: 0;
         overflow: hidden;
+        color: #fff;
+        font-family: 'Roboto', sans-serif;
       }
       #canvas {
         position: absolute;
@@ -16,17 +20,60 @@
         right: 0;
         bottom: 0;
       }
-      #vid-select {
-        z-index: 100;
+
+      #info {
         position: absolute;
-        top: 10px;
-        left: 10px;
+        z-index: 100;
+        top: 0;
+        left: 0;
+        padding: 5px;
+        background-color: #666666;
+      }
+
+      #color-cubes {
+
+      }
+
+      #color-cubes div {
+        text-selection: none;
+        cursor: pointer;
+        font-weight: 300;
       }
     </style>
   </head>
   <body>
-    <div id="vid-select" class="select">
-      <select id="videoSource"></select>
+    <div id="info">
+      <div id="vid-select" class="select">
+        <select id="videoSource"></select>
+      </div>
+      <div id="filter-value"></div>
+
+      <div id="color-cubes">
+        <h3>color cubes</h3>
+        <input type='checkbox' onChange='switchRandom();'>
+        <div>default</div>
+        <div>monochrome</div>
+        <div>sepia</div>
+        <div>saturated</div>
+        <div>posterize</div>
+        <div>inverse</div>
+        <div>color-negative</div>
+        <div>high-contrast-bw</div>
+        <div>funky-contrast</div>
+        <div>nightvision</div>
+        <div>thermal</div>
+        <div>black-white</div>
+        <div>hue-plus-60</div>
+        <div>hue-plus-180</div>
+        <div>hue-minus-60</div>
+        <div>red-to-cyan</div>
+        <div>blues</div>
+        <div>infrared</div>
+        <div>radioactive</div>
+        <div>goolgey</div>
+        <div>bgy</div>
+      </div>
+
     </div>
 
     <div id="canvas"></div>
@@ -34,8 +81,15 @@
     <canvas id="vid-canvas" width="320" height="240" style="display:none"></canvas>
     <canvas id="debug" width="320" height="240" style="position: absolute; display: none"></canvas>
 
+  <script src="js/third-party/jquery-2.1.1.min.js"></script>
   <script src="js/third-party/threejs/three.min.js"></script>
   <script src="js/third-party/threejs/StereoEffect.js"></script>
+  <script src="js/third-party/threejs/EffectComposer.js"></script>
+  <script src="js/third-party/threejs/MaskPass.js"></script>
+  <script src="js/third-party/threejs/RenderPass.js"></script>
+  <script src="js/third-party/threejs/ShaderPass.js"></script>
+  <script src="js/third-party/threejs/CopyShader.js"></script>
+  <script src="js/third-party/threex.coloradjust.js"></script>
   <script src="js/third-party/threex.webcamtexture.js"></script>
   <script src="js/third-party/headtrackr.js"></script>
 

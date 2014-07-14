@@ -3,8 +3,24 @@
 var camera, scene, renderer;
 var effect, controls;
 var element, container;
+var composer, renderPass;
+var colorPasses;
 
 var clock = new THREE.Clock();
+
+var settings = {
+  tracking: {
+    enabled: false
+  },
+  FOV: 90, // cam distance
+  filter: null
+};
+
+var randomEnabled = false;
+
+var _uniforms;
+
+var updateFns = [];
 
 var screenObj;
 
@@ -19,7 +35,6 @@ var webcamTexture;
 
 navigator.getUserMedia = navigator.getUserMedia ||
           navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
-var num = navigator.userAgent.match;
 var isMobile = navigator.userAgent.match(/Android/i) || navigator.userAgent.match(/webOS/i)
             || navigator.userAgent.match(/iPhone/i) || navigator.userAgent.match(/iPad/i)
             || navigator.userAgent.match(/iPod/i) || navigator.userAgent.match(/BlackBerry/i)
@@ -65,12 +80,6 @@ function postSources() {
 }
 
 function init() {
-  renderer = new THREE.WebGLRenderer();
-  element = renderer.domElement;
-  container = document.getElementById('canvas');
-  container.appendChild(element);
-
-  effect = new THREE.StereoEffect(renderer, { separation: 0.3 });
 
   scene = new THREE.Scene();
 
@@ -80,6 +89,9 @@ function init() {
 
   var light = new THREE.HemisphereLight(0x777777, 0x000000, 0.6);
   scene.add(light);
+
+
+  setupRendering();
 
   var texture = THREE.ImageUtils.loadTexture(
     'textures/patterns/checker.png'
@@ -106,15 +118,89 @@ function init() {
 
   setupWebcam();
 
-  setupFacebox();
+  if (settings.tracking.enabled) {
+    setupFacebox();
 
-  setupTracking();
+    setupTracking();
+  }
+
+  setupUI();
 
   if (isMobile)
     element.addEventListener('click', fullscreen, false);
 
   window.addEventListener('resize', resize, false);
   setTimeout(resize, 1);
+}
+
+function setupRendering() {
+  renderer = new THREE.WebGLRenderer();
+  element = renderer.domElement;
+  container = document.getElementById('canvas');
+  container.appendChild(element);
+
+  colorPasses = new THREEx.ColorAdjust.Passes();
+  updateFns.push(function(dt){
+    //colorPasses.update(dt);
+
+    var delay = 3.0;
+
+
+    _uniforms['mixAmount'].value  -= dt / delay;
+    if( _uniforms['mixAmount'].value < 0 ){
+      _uniforms['mixAmount'].value  = 0;
+    }
+  });
+
+
+  composer = new THREE.EffectComposer(renderer);
+  renderPass = new THREE.RenderPass(scene, camera);
+  composer.addPass(renderPass);
+
+  colorPasses.addPassesTo(composer);
+
+  composer.passes[composer.passes.length -1 ].renderToScreen  = true;
+
+  setInterval(function(){
+    if( randomEnabled === false ) return;
+    var values  = Object.keys(THREEx.ColorAdjust.colorCubes);
+    var index = Math.floor(Math.random()*values.length);
+    switchValue(values[index]);
+  }, 2*1000);
+
+
+  switchValue(location.hash.substr(1) || 'default');
+
+  effect = new THREE.StereoEffect(renderer, { separation: 0.3 });
+
+}
+
+function switchValue(value){
+  // set actual color cube
+  var unis = colorPasses.setColorCube(value);
+
+  _uniforms = unis;
+
+  //console.log(unis);
+
+  document.querySelector('#filter-value').innerText = value;
+  // update browser location for bookmarkability
+  location.hash = value;
+}
+
+function switchRandom(){
+  randomEnabled = randomEnabled === false ? true : false;
+}
+
+function setupUI() {
+  var els = $('#color-cubes div');
+
+  els.on('click', function(el){
+    var $this = $(this);
+    var val = $this.html();
+
+    switchValue(val);
+  });
 }
 
 function setupWebcam() {
@@ -130,14 +216,27 @@ function setupWebcam() {
 
   screenObj = new THREE.Object3D();
 
-  screenObj.position.set(0, 3, -10);
+  var dist = -10; // settings.FOV calc
+  screenObj.position.set(0, 3, dist);
 
   var geo = new THREE.PlaneGeometry(size, 1/aspect * size);
   var mat = new THREE.MeshBasicMaterial({
-    map : webcamTexture.texture,
-    side: THREE.DoubleSide
+    map : webcamTexture.texture
   });
-  var mesh = new THREE.Mesh(geo, mat);
+
+  
+  _uniforms = THREEx.ColorAdjust.Shader.uniforms;
+  _uniforms.tDiffuse.value = webcamTexture.texture;
+
+  var material = new THREE.ShaderMaterial({
+      uniforms: _uniforms,
+      vertexShader: THREEx.ColorAdjust.Shader.vertexShader,
+      fragmentShader: THREEx.ColorAdjust.Shader.fragmentShader
+    });
+
+
+
+  var mesh = new THREE.Mesh(geo, material);
 
   screenObj.add(mesh);
 
@@ -175,14 +274,14 @@ function setupTracking() {
   var canvasInput = document.getElementById('vid-canvas');
   var debugOverlay = document.getElementById('debug');
   
-  var settings = {
+  var _settings = {
     ui: 0,
     fadeVideo: 1,
     debug: debugOverlay,
     calcAngles: true
   };
 
-  htracker = new headtrackr.Tracker(settings);
+  htracker = new headtrackr.Tracker(_settings);
   htracker.init(videoInput, canvasInput, true);
   htracker.start();
 
@@ -298,19 +397,28 @@ function update(dt) {
 
   camera.updateProjectionMatrix();
 
-  debugTex.needsUpdate = true;
+  if (settings.tracking.enabled)
+    debugTex.needsUpdate = true;
+
   webcamTexture.update();
+
+  updateFns.forEach(function(f){
+    f(dt);
+  });
 }
 
 function render(dt) {
+  composer.render(dt);
   effect.render(scene, camera);
 }
 
 function animate(t) {
   requestAnimationFrame(animate);
 
-  update(clock.getDelta());
-  render(clock.getDelta());
+  var dt = clock.getDelta();
+
+  update(dt);
+  render(dt);
 }
 
 function changeCam() {
