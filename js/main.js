@@ -167,7 +167,12 @@ function setupWebcam() {
 
   var geo = new THREE.PlaneGeometry(size, 1/aspect * size);
 
-  colorPasses.colorPass.uniforms.tDiffuse.value = webcamTexture.texture;
+
+  var testTexture = THREE.ImageUtils.loadTexture('textures/test-pattern.jpg');
+
+  colorPasses.colorPass.uniforms.tDiffuse.value = testTexture;
+
+  //colorPasses.colorPass.uniforms.tDiffuse.value = webcamTexture.texture;
 
   var material = colorPasses.colorPass.material;
   material.side = THREE.DoubleSide;
@@ -258,11 +263,15 @@ function switchRandom(){
 function setupUI() {
   var els = $('#color-cubes div');
 
-  els.on('click', function(el){
+  els.on('click', function(ev){
     var $this = $(this);
     var val = $this.html();
 
     switchValue(val);
+  });
+
+  $('#toggle-play').on('click', function(ev){
+    webcamTexture.togglePlay();
   });
 }
 
@@ -345,7 +354,7 @@ function setupFacebox() {
 
   var size = 10;
 
-  debugCtx = document.getElementById('debug');//.getContext('2d');
+  debugCtx = document.getElementById('debug');
   debugTex = new THREE.Texture(debugCtx);
   debugTex.needsUpdate = true;
 
@@ -405,6 +414,10 @@ function update(dt) {
 
   if (settings.tracking.enabled)
     debugTex.needsUpdate = true;
+
+  if (window.stream) {
+    colorPasses.colorPass.uniforms.tDiffuse.value = webcamTexture.texture;
+  }
 
   webcamTexture.update();
 

@@ -3,7 +3,7 @@ var THREEx = THREEx || {}
 navigator.getUserMedia = navigator.getUserMedia ||
   navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
 
-THREEx.WebcamTexture	= function(options){
+THREEx.WebcamTexture = function(options){
 
 	var video	= document.createElement('video');
 	video.id = 'vid-src';
@@ -46,7 +46,15 @@ THREEx.WebcamTexture	= function(options){
 		navigator.getUserMedia(constraints, this.successCallback, this.errorCallback);
 	}
 
-	this.destroy	= function(){
+	this.togglePlay = function(){
+		if (video.paused) {
+			video.play();
+		} else {
+			video.pause();
+		}
+	}
+
+	this.destroy = function(){
 		video.pause();
 	}
 }
