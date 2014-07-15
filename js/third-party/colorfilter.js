@@ -1,10 +1,10 @@
-var THREEx	= THREEx	|| {};
+var N = N || {};
 
-THREEx.ColorAdjust	= {};
+N.ColorFilter = {};
 
-THREEx.ColorAdjust.baseURL	= 'images/';
+N.ColorFilter.baseURL = 'images/';
 
-THREEx.ColorAdjust.colorCubes	= {
+N.ColorFilter.colorCubes = {
 	'default' : 'default.png',
 	'monochrome' : 'monochrome.png',
 	'sepia' : 'sepia.png',
@@ -26,15 +26,22 @@ THREEx.ColorAdjust.colorCubes	= {
 	'radioactive' : 'radioactive.png',
 	'goolgey' : 'googley.png',
 	'bgy' : 'bgy.png',
-}
+};
 
-THREEx.ColorAdjust.Passes	= function(){
+/**
+ * how to change so it is usable in a existing post processing chain ?
+ * - possibility: 
+ *   - put only the effect in a class
+ *   - put the renderer in another
+ */
+
+N.ColorFilter.Passes = function(){
 
 	var effect	= new THREE.ShaderPass( THREEx.ColorAdjust.Shader )
-	this.colorPass = effect;
+	this.colorPass	= effect;
 
-	this.addPassesTo = function(composer){
-		composer.addPass( effect );
+	this.addPassesTo	= function(composer){
+		composer.addPass( effect )	
 	}
 
 	// set default configuration
@@ -55,7 +62,7 @@ THREEx.ColorAdjust.Passes	= function(){
 	this.update	= function(delta, now){
 		// constantly decrease ```mixAmount``` to zero to ease transition
 		effect.uniforms['mixAmount'].value	-= delta/this.delay;
-		if ( effect.uniforms['mixAmount'].value < 0 ){
+		if( effect.uniforms['mixAmount'].value < 0 ){
 			effect.uniforms['mixAmount'].value	= 0 
 		}
 	}.bind(this)
@@ -128,7 +135,7 @@ THREEx.ColorAdjust.Passes	= function(){
  * - from http://webglsamples.googlecode.com/hg/color-adjust/color-adjust.html 
  * - light adjustment to work with three.js
  */
-THREEx.ColorAdjust.Shader	= {
+N.ColorFilter.Shader = {
 	uniforms	: {
 		'tDiffuse'	: { type: 't', value: null },
 		'mixAmount'	: { type: 'f', value: 0.5 },

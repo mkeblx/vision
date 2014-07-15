@@ -1,0 +1,45 @@
+body {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  color: #fff;
+  font-family: 'Roboto', sans-serif;
+}
+
+#canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+#info {
+  position: absolute;
+  z-index: 100;
+  top: 0;
+  left: 0;
+  padding: 5px;
+  background-color: #666666;
+}
+
+h1 {
+  font-size: 20px;
+  line-height: 26px;
+  font-weight: 300;
+  margin: 0;
+}
+
+#color-cubes {
+
+}
+#color-cubes div {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  cursor: pointer;
+  font-weight: 300;
+}

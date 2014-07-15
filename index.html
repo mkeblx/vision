@@ -5,44 +5,12 @@
     <title>Cardboard Video Feed</title>
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
     <link href="http://fonts.googleapis.com/css?family=Roboto:400,300,500,700" rel="stylesheet">
-    <style>
-      body {
-        margin: 0;
-        padding: 0;
-        overflow: hidden;
-        color: #fff;
-        font-family: 'Roboto', sans-serif;
-      }
-      #canvas {
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-      }
-
-      #info {
-        position: absolute;
-        z-index: 100;
-        top: 0;
-        left: 0;
-        padding: 5px;
-        background-color: #666666;
-      }
-
-      #color-cubes {
-
-      }
-
-      #color-cubes div {
-        text-selection: none;
-        cursor: pointer;
-        font-weight: 300;
-      }
-    </style>
+    <link href="css/style.css" rel="stylesheet">
   </head>
   <body>
     <div id="info">
+      <h1>cardboard-ar</h1>
+
       <div id="vid-select" class="select">
         <select id="videoSource"></select>
       </div>
@@ -50,7 +18,7 @@
 
       <div id="color-cubes">
         <h3>color cubes</h3>
-        <input type='checkbox' onChange='switchRandom();'>
+        <input type="checkbox" onChange="switchRandom();">
         <div>default</div>
         <div>monochrome</div>
         <div>sepia</div>
