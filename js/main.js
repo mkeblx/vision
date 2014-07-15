@@ -15,7 +15,8 @@ var settings = {
   FOV: 90, // cam distance
   filter: null,
   flipX: false,
-  flipY: false
+  flipY: false,
+  freeLook: false
 };
 
 
@@ -67,7 +68,7 @@ function gotSources(sourceInfos) {
       option.text = sourceInfo.label || 'camera ' + (videoSelect.length + 1);
       videoSelect.appendChild(option);
     } else {
-      console.log('Some other kind of source: ', sourceInfo);
+      //console.log('Some other kind of source: ', sourceInfo);
     }
   }
 
@@ -78,7 +79,7 @@ function gotSources(sourceInfos) {
 }
 
 if (typeof MediaStreamTrack === 'undefined'){
-  alert('This browser does not support MediaStreamTrack.\n\nTry Chrome Canary.');
+  console.log('This browser does not support MediaStreamTrack.\n\nTry Chrome Canary.');
 } else {
   MediaStreamTrack.getSources(gotSources);
 }
@@ -92,14 +93,6 @@ function init() {
 
   scene = new THREE.Scene();
 
-  camera = new THREE.PerspectiveCamera(90, 1, 0.001, 7000);
-  camera.position.set(0, 3, 0);
-  scene.add(camera);
-
-  var light = new THREE.HemisphereLight(0x777777, 0x000000, 0.6);
-  scene.add(light);
-
-
   setupRendering();
 
   setupScene();
@@ -112,15 +105,40 @@ function init() {
 
   setupUI();
 
-  if (isMobile)
+  if (isMobile) {
+
+    if (settings.freeLook) {
+      window.addEventListener('deviceorientation', setOrientationControls, true);
+    }
+
     element.addEventListener('click', fullscreen, false);
+  }
 
   window.addEventListener('resize', resize, false);
   setTimeout(resize, 1);
 }
 
+function setOrientationControls(e) {
+  if (!e.alpha) {
+    return;
+  }
+
+  controls = new THREE.DeviceOrientationControls(camera, true);
+  controls.connect();
+  controls.update();
+
+  window.removeEventListener('deviceorientation', setOrientationControls);
+}
+
 function setupScene() {
-  //setupFloor();
+  camera = new THREE.PerspectiveCamera(90, 1, 0.001, 7000);
+  camera.position.set(0, 3, 0);
+  scene.add(camera);
+
+  var light = new THREE.HemisphereLight(0x777777, 0x000000, 0.6);
+  scene.add(light);
+
+  setupFloor();
   setupWebcam();
 }
 
@@ -172,8 +190,6 @@ function setupWebcam() {
 
   colorPasses.colorPass.uniforms.tDiffuse.value = testTexture;
 
-  //colorPasses.colorPass.uniforms.tDiffuse.value = webcamTexture.texture;
-
   var material = colorPasses.colorPass.material;
   material.side = THREE.DoubleSide;
 
@@ -189,9 +205,7 @@ function setupWebcam() {
   screenObj.add(mesh);
 
 
-  var glowTexture = THREE.ImageUtils.loadTexture(
-    'textures/border.png'
-  );
+  var glowTexture = THREE.ImageUtils.loadTexture('textures/border.png');
 
   var bR = 1.2;
   geo = new THREE.PlaneGeometry(size*1.15, (1/aspect*size) * 1.2);
@@ -272,6 +286,10 @@ function setupUI() {
 
   $('#toggle-play').on('click', function(ev){
     webcamTexture.togglePlay();
+  });
+
+  $('#random-mode').on('click', function(ev){
+    switchRandom();
   });
 }
 
@@ -412,11 +430,16 @@ function update(dt) {
 
   camera.updateProjectionMatrix();
 
-  if (settings.tracking.enabled)
+  if (settings.tracking.enabled) {
     debugTex.needsUpdate = true;
+  }
 
   if (window.stream) {
     colorPasses.colorPass.uniforms.tDiffuse.value = webcamTexture.texture;
+  }
+
+  if (controls) {
+    controls.update(dt);
   }
 
   webcamTexture.update();
@@ -427,9 +450,7 @@ function update(dt) {
 }
 
 function render(dt) {
-  //composer.render(dt);
   effect.render(scene, camera);
-  //render.render(scene, camera);
 }
 
 function animate(t) {

@@ -16,11 +16,11 @@
       </div>
       <div id="filter-value"></div>
 
-      <div id="toggle-play">toggle play</div>
+      <input type="button" id="toggle-play" value="play/pause">
 
       <div id="color-cubes">
         <h3>color cubes</h3>
-        <input type="checkbox" onChange="switchRandom();">
+        <input type="button" id="random-mode" value="random">
         <div>default</div>
         <div>monochrome</div>
         <div>sepia</div>
@@ -54,6 +54,7 @@
   <script src="js/third-party/jquery-2.1.1.min.js"></script>
   <script src="js/third-party/threejs/three.min.js"></script>
   <script src="js/third-party/threejs/StereoEffect.js"></script>
+  <script src="js/third-party/threejs/DeviceOrientationControls.js"></script>  
   <script src="js/third-party/threejs/EffectComposer.js"></script>
   <script src="js/third-party/threejs/MaskPass.js"></script>
   <script src="js/third-party/threejs/RenderPass.js"></script>
