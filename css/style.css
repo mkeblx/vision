@@ -18,16 +18,36 @@ body {
   position: absolute;
   z-index: 100;
   top: 0;
+  bottom: 0;
   left: 0;
-  padding: 5px;
-  background-color: #666666;
+  padding: 8px;
+  background-color: #222;
+}
+
+input[type=button], select {
+  width: 100%;
+  font-size: 16px;
+}
+
+#random-mode {
+  margin-bottom: 4px;
+}
+
+#filter-value {
+  display: none;
 }
 
 h1 {
   font-size: 20px;
   line-height: 26px;
+  font-weight: 100;
+  margin: 0 0 6px;
+}
+
+h3 {
   font-weight: 300;
   margin: 0;
+  margin-top: 12px;
 }
 
 #color-cubes {
@@ -41,5 +61,14 @@ h1 {
   -ms-user-select: none;
   user-select: none;
   cursor: pointer;
-  font-weight: 300;
+  font-weight: 200;
+  padding: 1px 3px;
+}
+
+#color-cubes div:hover {
+  background-color: rgba(255,255,255,0.4);
+}
+
+#color-cubes div.selected {
+  background-color: rgba(255,255,255,0.4);
 }

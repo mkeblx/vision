@@ -249,7 +249,12 @@ function setupRendering() {
     if( randomEnabled === false ) return;
     var values  = Object.keys(THREEx.ColorAdjust.colorCubes);
     var index = Math.floor(Math.random()*values.length);
-    switchValue(values[index]);
+    var filter = values[index];
+
+    $('#color-cubes div').removeClass('selected');
+    $('#color-cubes').find('div:contains("'+filter+'")').addClass('selected');
+
+    switchValue(filter);
   }, 5*1000);
 
 
@@ -259,12 +264,9 @@ function setupRendering() {
 }
 
 function switchValue(value){
-  // set actual color cube
   var unis = colorPasses.setColorCube(value);
 
   _uniforms = unis;
-
-  //console.log(unis);
 
   document.querySelector('#filter-value').innerText = value;
   location.hash = value;
@@ -275,11 +277,13 @@ function switchRandom(){
 }
 
 function setupUI() {
-  var els = $('#color-cubes div');
-
-  els.on('click', function(ev){
+  $('#color-cubes').on('click', 'div', function(ev){
     var $this = $(this);
     var val = $this.html();
+    $this.parent().find('div').removeClass('selected');
+    $this.addClass('selected');
+
+    randomEnabled = false;
 
     switchValue(val);
   });
