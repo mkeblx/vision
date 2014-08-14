@@ -138,7 +138,7 @@ function setupScene() {
   var light = new THREE.HemisphereLight(0x777777, 0x000000, 0.6);
   scene.add(light);
 
-  setupFloor();
+  //setupFloor();
   setupWebcam();
 }
 

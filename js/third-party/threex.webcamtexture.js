@@ -1,7 +1,6 @@
 var THREEx = THREEx || {}
 
-navigator.getUserMedia = navigator.getUserMedia ||
-  navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
+navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
 
 THREEx.WebcamTexture = function(options){
 
