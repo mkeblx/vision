@@ -2,7 +2,7 @@ body {
   margin: 0;
   padding: 0;
   overflow: hidden;
-  color: #fff;
+  color: #000;
   font-family: 'Roboto', sans-serif;
 }
 
@@ -21,7 +21,7 @@ body {
   bottom: 0;
   left: 0;
   padding: 8px;
-  background-color: #222;
+  background-color: #eee;
 }
 
 input[type=button], select {
@@ -39,9 +39,9 @@ input[type=button], select {
 
 h1 {
   font-size: 20px;
-  line-height: 26px;
-  font-weight: 100;
-  margin: 0 0 6px;
+  line-height: 20px;
+  font-weight: 300;
+  margin: 0 0 10px;
 }
 
 h3 {
@@ -61,14 +61,19 @@ h3 {
   -ms-user-select: none;
   user-select: none;
   cursor: pointer;
-  font-weight: 200;
+  font-weight: 300;
   padding: 1px 3px;
+  color: #333;
 }
 
 #color-cubes div:hover {
-  background-color: rgba(255,255,255,0.4);
+  background-color: rgba(255,255,255,0.8);
 }
 
 #color-cubes div.selected {
-  background-color: rgba(255,255,255,0.4);
+  background-color: rgba(255,255,255,0.95);
+}
+
+#capture-sec {
+  display: none;
 }

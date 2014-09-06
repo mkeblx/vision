@@ -9,17 +9,25 @@
   </head>
   <body>
     <div id="info">
-      <h1>cardboard-ar</h1>
+      <h1>Cardboard Vision</h1>
 
-      <div id="vid-select" class="select">
-        <select id="videoSource"></select>
+      <div id="cam-sec" class="sec">
+        <div id="vid-select" class="select">
+          <select id="videoSource"></select>
+        </div>
+        <input type="button" id="toggle-play" value="play/pause">
       </div>
+
+      <div id="fov-sec" class="sec">
+        <h3>FOV</h3>
+        <input id="fov-select" type="range" value="60" min="20" max="130" step="5">
+      </div>
+
+      <div id="filter-sec" class="sec">
       <div id="filter-value"></div>
 
-      <input type="button" id="toggle-play" value="play/pause">
-
       <h3>filters</h3>
-      <input type="button" id="random-mode" value="random">
+      <input type="button" id="random-mode" value="random cycle">
       <div id="color-cubes">
         <div>default</div>
         <div>monochrome</div>
@@ -42,6 +50,12 @@
         <div>radioactive</div>
         <div>goolgey</div>
         <div>bgy</div>
+      </div>
+      </div>
+
+      <div id="capture-sec">
+        <canvas id="snapshot" width="320" height="240"></canvas>
+        <input type="button" id="capture-btn" value="capture">
       </div>
 
     </div>

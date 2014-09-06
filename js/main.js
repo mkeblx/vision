@@ -12,13 +12,17 @@ var settings = {
   tracking: {
     enabled: false
   },
-  FOV: 90, // cam distance
+  size: 10,
   filter: null,
   flipX: false,
   flipY: false,
   freeLook: false
 };
 
+var _params = {
+  fov: 60,
+  filter: 'default'
+};
 
 var randomEnabled = false;
 
@@ -51,22 +55,26 @@ var isMobile = navigator.userAgent.match(/Android/i) || navigator.userAgent.matc
             || navigator.userAgent.match(/Windows Phone/i);
 
 
-var videoSelect = document.querySelector("select#videoSource");
+var videoSelect = $('#videoSource');
 
 var vidSources = [];
 
 function gotSources(sourceInfos) {
+  var n = 0;
   for (var i = 0; i != sourceInfos.length; ++i) {
     var sourceInfo = sourceInfos[i];
-    var option = document.createElement("option");
-    option.value = sourceInfo.id;
+    var option = $('<option>');
+    option.val(sourceInfo.id);
     if (sourceInfo.kind === 'video') {
+      n++;
       vidSources.push({
-          label: sourceInfo.label || 'camera ' + (vidSources.length + 1),
+          label: sourceInfo.label || 'camera ' + n,
           id: sourceInfo.id
         });
-      option.text = sourceInfo.label || 'camera ' + (videoSelect.length + 1);
-      videoSelect.appendChild(option);
+      option.html(sourceInfo.label || 'camera ' + n);
+      videoSelect.append(option);
+
+      //option:last-child
     } else {
       //console.log('Some other kind of source: ', sourceInfo);
     }
@@ -79,7 +87,7 @@ function gotSources(sourceInfos) {
 }
 
 if (typeof MediaStreamTrack === 'undefined'){
-  console.log('This browser does not support MediaStreamTrack.\n\nTry Chrome Canary.');
+  console.log('This browser does not support MediaStreamTrack.\n\nTry Chrome.');
 } else {
   MediaStreamTrack.getSources(gotSources);
 }
@@ -90,6 +98,18 @@ function postSources() {
 }
 
 function init() {
+  var params = getHashParams();
+  console.log(params);
+  if (params != null) {
+    console.log('reading params');
+    console.log(params);
+    if (params['fov'] != undefined) {
+      _params.fov = params['fov'];
+    }
+    if (params['filter'] != undefined) {
+      _params.filter = params['filter'];
+    }
+  }
 
   scene = new THREE.Scene();
 
@@ -168,19 +188,19 @@ function setupFloor() {
 }
 
 function setupWebcam() {
-  var id = videoSelect.value;
+  var id = videoSelect.val();
   webcamTexture = new THREEx.WebcamTexture();
 
   webcamTexture.setSource(id);
 
-  var w = 320, h = 240;
+  var w = 640, h = 480;
   var aspect = w/h;
 
-  var size = 10;
+  var size = settings.size;
 
   screenObj = new THREE.Object3D();
 
-  var dist = -10; // settings.FOV calc
+  var dist = -fovToDist(_params.fov);
   screenObj.position.set(0, 3, dist);
 
   var geo = new THREE.PlaneGeometry(size, 1/aspect * size);
@@ -218,10 +238,32 @@ function setupWebcam() {
 
   glowMesh.position.z = -0.1;
 
-  screenObj.add(glowMesh);
+  //screenObj.add(glowMesh);
 
   scene.add(screenObj);
 }
+
+/* TODO: 
+-capture with filter
+-capture meta data: geo, orientation, etc
+-upload to cloud, social media
+-place in scene: smaller, next to main video feed
+*/
+function snapshot() {
+  var canvas = document.querySelector('#snapshot');
+  var ctx = canvas.getContext('2d');
+
+  if (stream) {
+    ctx.drawImage(webcamTexture.video, 0, 0);
+    //document.querySelector('img').src = canvas.toDataURL('image/png');
+  } else {
+    console.log('no stream active');
+  }
+}
+
+$('#capture-btn').on('click', function(){
+  snapshot();
+});
 
 function setupRendering() {
   var renderTargetParams = {
@@ -258,9 +300,22 @@ function setupRendering() {
   }, 5*1000);
 
 
-  switchValue(location.hash.substr(1) || 'default');
+  switchValue(getHashParam('filter') || 'default');
 
   effect = new THREE.StereoEffect(renderer, { separation: 0.3 });
+}
+
+// horizontal FOV
+function fovToDist(fov) {
+  var rad = fov*0.5 *Math.PI/180;
+  var d = 0.5*settings.size / Math.tan(rad);
+  console.log(fov + 'deg : ' + d);
+  return d;
+}
+
+function setFOV() {
+  var dist = -fovToDist(_params.fov);
+  screenObj.position.set(0, 3, dist);  
 }
 
 function switchValue(value){
@@ -268,12 +323,43 @@ function switchValue(value){
 
   _uniforms = unis;
 
-  document.querySelector('#filter-value').innerText = value;
-  location.hash = value;
+  $('#filter-value').html(value);
+  _params.filter = value;
+  setHashParams();
 }
 
 function switchRandom(){
   randomEnabled = randomEnabled === false ? true : false;
+}
+
+
+function getHashParam(paramName) {
+  var params = getHashParams();
+  return params[paramName];
+}
+
+function setHashParams() {
+  var hash = 'fov:' + _params['fov'] + '|filter:' + _params['filter'];
+  window.location.hash = hash;
+}
+
+function getHashParams() {
+  var hash = window.location.hash.substr(1);
+
+  console.log(hash);
+
+  if (hash == null || hash == '')
+    return {};
+  
+  var params = {};
+  var parts = hash.split('|');
+
+  for (var i = 0; i < parts.length; i++) {
+    var p = parts[i].split(':');
+    params[p[0]] = p[1];
+  }
+
+  return params;
 }
 
 function setupUI() {
@@ -288,12 +374,28 @@ function setupUI() {
     switchValue(val);
   });
 
+  videoSelect.on('change', changeCam);
+
+  $('#fov-select').on('input change', function(ev){
+    var val = $(this).val();
+    console.log('fov: ' + val);
+
+    _params.fov = val;
+    setFOV();
+    setHashParams();
+  });
+
   $('#toggle-play').on('click', function(ev){
     webcamTexture.togglePlay();
   });
 
   $('#random-mode').on('click', function(ev){
     switchRandom();
+  });
+
+  $(window).on('hashchange',function(){ 
+    console.log(window.location.hash.slice(1));
+    // handle manual change of params in url
   });
 }
 
@@ -374,7 +476,7 @@ function setupFacebox() {
   var w = 320, h = 240;
   var aspect = w/h;
 
-  var size = 10;
+  var size = settings.size;
 
   debugCtx = document.getElementById('debug');
   debugTex = new THREE.Texture(debugCtx);
@@ -467,12 +569,10 @@ function animate(t) {
 }
 
 function changeCam() {
-  var id = videoSelect.value;
+  var id = videoSelect.val();
   console.log('set vid source to: ' + id);
   webcamTexture.setSource(id);
 }
-
-videoSelect.onchange = changeCam;
 
 function fullscreen() {
   if (container.requestFullscreen) {
