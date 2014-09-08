@@ -74,13 +74,12 @@ function gotSources(sourceInfos) {
       option.html(sourceInfo.label || 'camera ' + n);
       videoSelect.append(option);
 
-      //option:last-child
     } else {
       //console.log('Some other kind of source: ', sourceInfo);
     }
   }
-
   console.log(vidSources.length + ' video sources found');
+
 
   postSources();
 
@@ -93,11 +92,14 @@ if (typeof MediaStreamTrack === 'undefined'){
 }
 
 function postSources() {
+  videoSelect.find('option:last-child').attr('selected', 'selected');
+
   init();
   animate();
 }
 
 function init() {
+
   var params = getHashParams();
   console.log(params);
   if (params != null) {
