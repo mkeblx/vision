@@ -29,6 +29,14 @@ input[type=button], select {
   font-size: 16px;
 }
 
+#fov-select {
+  width: 100%;
+}
+
+#fov {
+  float: right;
+}
+
 #random-mode {
   margin-bottom: 4px;
 }

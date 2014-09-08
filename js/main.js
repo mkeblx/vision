@@ -202,11 +202,9 @@ function setupWebcam() {
 
   screenObj = new THREE.Object3D();
 
-  var dist = -fovToDist(_params.fov);
-  screenObj.position.set(0, 3, dist);
+  setFOV(_params.fov);
 
   var geo = new THREE.PlaneGeometry(size, 1/aspect * size);
-
 
   var testTexture = THREE.ImageUtils.loadTexture('textures/test-pattern.jpg');
 
@@ -315,9 +313,10 @@ function fovToDist(fov) {
   return d;
 }
 
-function setFOV() {
-  var dist = -fovToDist(_params.fov);
-  screenObj.position.set(0, 3, dist);  
+function setFOV(fov) {
+  var dist = -fovToDist(fov);
+  screenObj.position.set(0, 3, dist);
+  $('#fov').html(fov+'&deg;');
 }
 
 function switchValue(value){
@@ -383,7 +382,7 @@ function setupUI() {
     console.log('fov: ' + val);
 
     _params.fov = val;
-    setFOV();
+    setFOV(val);
     setHashParams();
   });
 
