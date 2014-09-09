@@ -1,3 +1,10 @@
+html {
+  box-sizing: border-box;
+}
+*, *:before, *:after {
+  box-sizing: inherit;
+}
+
 body {
   margin: 0;
   padding: 0;
@@ -54,6 +61,7 @@ h1 {
 
 h3 {
   font-weight: 300;
+  font-size: 16px;
   margin: 0;
   margin-top: 12px;
 }
@@ -70,8 +78,9 @@ h3 {
   user-select: none;
   cursor: pointer;
   font-weight: 300;
-  padding: 1px 3px;
+  padding: 0px 3px;
   color: #333;
+  font-size: 15px;
 }
 
 #color-cubes div:hover {
@@ -84,4 +93,24 @@ h3 {
 
 #capture-sec {
   display: none;
+}
+
+#credits {
+  position: absolute;
+  bottom: 0px;
+  font-size: 12px;
+  font-weight: 300;
+  margin: 0px 0px 0px -8px;
+  text-align: center;
+  width: 100%;
+  background-color: #eee;
+  padding: 7px;
+  display: none;
+}
+
+#credits a {
+  color: #222;
+  text-decoration: none;
+  padding-bottom: 0px;
+  border-bottom: 1px solid #222;
 }
