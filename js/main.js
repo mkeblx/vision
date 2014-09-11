@@ -45,6 +45,8 @@ var faceMesh, debugTex, debugCtx;
 var webcamTexture;
 
 
+var bc;
+
 var first = true;
 
 navigator.getUserMedia = navigator.getUserMedia ||
@@ -99,6 +101,9 @@ function postSources() {
 }
 
 function init() {
+  var options = {
+  };
+  bc = new BC(options);
 
   var params = getHashParams();
   console.log(params);
