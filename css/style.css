@@ -36,6 +36,14 @@ input[type=button], select {
   font-size: 16px;
 }
 
+#videoSource {
+  width: 73%;
+}
+
+#toggle-play {
+  width: 24%;
+}
+
 #fov-select {
   width: 100%;
 }

@@ -30,6 +30,7 @@ var _uniforms;
 
 var renderTarget;
 
+var fbRef, roomRef;
 
 var updateFns = [];
 
@@ -43,9 +44,6 @@ var haveTracking = false;
 var faceMesh, debugTex, debugCtx;
 
 var webcamTexture;
-
-
-var bc;
 
 var first = true;
 
@@ -101,22 +99,7 @@ function postSources() {
 }
 
 function init() {
-  var options = {
-  };
-  bc = new BC(options);
-
-  var params = getHashParams();
-  console.log(params);
-  if (params != null) {
-    console.log('reading params');
-    console.log(params);
-    if (params['fov'] != undefined) {
-      _params.fov = params['fov'];
-    }
-    if (params['filter'] != undefined) {
-      _params.filter = params['filter'];
-    }
-  }
+  setupFb();
 
   scene = new THREE.Scene();
 
@@ -143,6 +126,29 @@ function init() {
 
   window.addEventListener('resize', resize, false);
   setTimeout(resize, 1);
+}
+
+function setupFb() {
+  fbRef = new Firebase('https://cardboard-vision.firebaseio.com/');
+
+  var roomsRef = fbRef.child('rooms');
+  roomRef = roomsRef.child('global');
+
+  roomRef.on('value', function(s){
+    console.log('receiving command');
+    console.log(s.val());
+    var filter = s.val().filter;
+    var fov = s.val().fov;
+
+    _params.filter = filter;
+    _params.fov = fov;
+
+    setFOV(fov);
+    switchValue(filter);
+
+    $('#color-cubes div').removeClass('selected');
+    $('#color-cubes').find('div:contains("'+filter+'")').addClass('selected');
+  });
 }
 
 function setOrientationControls(e) {
@@ -304,8 +310,7 @@ function setupRendering() {
     switchValue(filter);
   }, 5*1000);
 
-
-  switchValue(getHashParam('filter') || 'default');
+  //switchValue(_params['filter']);
 
   effect = new THREE.StereoEffect(renderer, { separation: 0.3 });
 }
@@ -322,6 +327,7 @@ function setFOV(fov) {
   var dist = -fovToDist(fov);
   screenObj.position.set(0, 3, dist);
   $('#fov').html(fov+'&deg;');
+  $('#fov-select').val(fov);
 }
 
 function switchValue(value){
@@ -331,6 +337,14 @@ function switchValue(value){
 
   $('#filter-value').html(value);
   _params.filter = value;
+
+  sendCmd({
+    name: 'filter',
+    data: {
+      value: value
+    }
+  });
+
   setHashParams();
 }
 
@@ -346,7 +360,7 @@ function getHashParam(paramName) {
 
 function setHashParams() {
   var hash = 'fov:' + _params['fov'] + '|filter:' + _params['filter'];
-  window.location.hash = hash;
+  // window.location.hash = hash;
 }
 
 function getHashParams() {
@@ -366,6 +380,19 @@ function getHashParams() {
   }
 
   return params;
+}
+
+function sendCmd(cmd) {
+  console.log('sendCmd: ' + cmd);
+
+  roomRef.update({
+    filter: _params['filter'],
+    fov: _params['fov']
+  });
+}
+
+function receiveCmd(cmd) {
+  console.log('receiveCmd: ' + cmd);
 }
 
 function setupUI() {
@@ -388,6 +415,12 @@ function setupUI() {
 
     _params.fov = val;
     setFOV(val);
+    sendCmd({
+      name: 'fov',
+      data: {
+        value: val
+      }
+    });
     setHashParams();
   });
 
@@ -400,7 +433,7 @@ function setupUI() {
   });
 
   $(window).on('hashchange',function(){ 
-    console.log(window.location.hash.slice(1));
+    // console.log(window.location.hash.slice(1));
     // handle manual change of params in url
   });
 }
