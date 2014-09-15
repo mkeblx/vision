@@ -132,13 +132,26 @@ function setupFb() {
   fbRef = new Firebase('https://cardboard-vision.firebaseio.com/');
 
   var roomsRef = fbRef.child('rooms');
-  roomRef = roomsRef.child('global');
+
+  var room = 'global';
+  var hash = window.location.hash.substr(1);
+
+  if (hash == null || hash == '') {
+    room = Math.round(Math.random()*1000);
+    window.location.hash = room;
+  } else {
+    room = hash;
+  }
+
+  roomRef = roomsRef.child(room);
 
   roomRef.on('value', function(s){
-    console.log('receiving command');
-    console.log(s.val());
-    var filter = s.val().filter;
-    var fov = s.val().fov;
+    var v = s.val();
+    if (v == null)
+      return;
+
+    var filter = v.filter;
+    var fov = v.fov;
 
     _params.filter = filter;
     _params.fov = fov;
