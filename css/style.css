@@ -21,6 +21,26 @@ body {
   bottom: 0;
 }
 
+#fs-button {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  padding: 8px;
+  color: #fff;
+  background-color: #555;
+  z-index: 100;
+}
+
+#fs-button:hover {
+  cursor: pointer;
+  background-color: #777;
+}
+
+#fs-button.error {
+  pointer-events: none;
+  background-color: red;
+}
+
 #info {
   position: absolute;
   z-index: 100;

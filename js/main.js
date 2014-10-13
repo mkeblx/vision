@@ -16,7 +16,8 @@ var settings = {
   filter: null,
   flipX: false,
   flipY: false,
-  freeLook: false
+  freeLook: false,
+  sync: false
 };
 
 var _params = {
@@ -55,6 +56,18 @@ var isMobile = navigator.userAgent.match(/Android/i) || navigator.userAgent.matc
             || navigator.userAgent.match(/Windows Phone/i);
 
 
+var fullScreenButton;
+
+var vrEffect;
+var vrControls;
+
+var has = {
+  WebVR: !!navigator.getVRDevices
+};
+
+var riftMode = has.WebVR && !isMobile;
+
+
 var videoSelect = $('#videoSource');
 
 var vidSources = [];
@@ -88,7 +101,13 @@ function gotSources(sourceInfos) {
 if (typeof MediaStreamTrack === 'undefined'){
   console.log('This browser does not support MediaStreamTrack.\n\nTry Chrome.');
 } else {
-  MediaStreamTrack.getSources(gotSources);
+  if (MediaStreamTrack.getSources) {
+    MediaStreamTrack.getSources(gotSources);
+  } else {
+    $('#cam-sec').hide();
+    init();
+    animate();
+  }
 }
 
 function postSources() {
@@ -99,7 +118,10 @@ function postSources() {
 }
 
 function init() {
-  setupFb();
+  fullScreenButton = document.getElementById('fs-button');
+
+  if (settings.sync)
+    setupFb();
 
   scene = new THREE.Scene();
 
@@ -303,6 +325,13 @@ function setupRendering() {
   container = document.getElementById('canvas');
   container.appendChild(element);
 
+  function VREffectLoaded(error) {
+    if (error) {
+      fullScreenButton.innerHTML = error;
+      fullScreenButton.classList.add('error');
+    }
+  }
+
   colorPasses = new THREEx.ColorAdjust.Passes();
 
   _uniforms = colorPasses.colorPass.uniforms;
@@ -325,7 +354,12 @@ function setupRendering() {
 
   //switchValue(_params['filter']);
 
-  effect = new THREE.StereoEffect(renderer, { separation: 0.3 });
+  if (riftMode) {
+    vrEffect = new THREE.VREffect(renderer, VREffectLoaded);
+    vrControls = new THREE.VRControls(camera);
+  } else {
+    effect = new THREE.StereoEffect(renderer, { separation: 0.3 });
+  }
 }
 
 // horizontal FOV
@@ -398,10 +432,12 @@ function getHashParams() {
 function sendCmd(cmd) {
   console.log('sendCmd: ' + cmd);
 
-  roomRef.update({
-    filter: _params['filter'],
-    fov: _params['fov']
-  });
+  if (settings.sync) {
+    roomRef.update({
+      filter: _params['filter'],
+      fov: _params['fov']
+    });
+  }
 }
 
 function receiveCmd(cmd) {
@@ -444,6 +480,10 @@ function setupUI() {
   $('#random-mode').on('click', function(ev){
     switchRandom();
   });
+
+  fullScreenButton.addEventListener('click', function(){
+    vrEffect.setFullScreen(true);
+  }, true);
 
   $(window).on('hashchange',function(){ 
     // console.log(window.location.hash.slice(1));
@@ -579,8 +619,12 @@ function resize() {
   camera.aspect = width / height;
   camera.updateProjectionMatrix();
 
-  renderer.setSize(width, height);
-  effect.setSize(width, height);
+  if (riftMode) {
+    renderer.setSize(width, height);
+  } else {
+    renderer.setSize(width, height);
+    effect.setSize(width, height);
+  }
 }
 
 function update(dt) {
@@ -608,7 +652,10 @@ function update(dt) {
 }
 
 function render(dt) {
-  effect.render(scene, camera);
+  if (riftMode)
+    vrEffect.render(scene, camera);
+  else
+    effect.render(scene, camera);
 }
 
 function animate(t) {
