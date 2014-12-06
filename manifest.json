@@ -1,0 +1,15 @@
+{
+  "short_name": "vision",
+  "name": "vision",
+  "icons": [
+    {
+    	"src": "images/launcher-icon.png",
+    	"sizes": "96x96",
+    	"type": "image/png",
+    	"density": "1.0"
+    }
+  ],
+  "start_url": "index.html",
+  "display": "fullscreen",
+  "orientation": "landscape"
+}
